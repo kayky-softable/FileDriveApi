@@ -1,0 +1,5 @@
+@FileDriveAPi_HostAddress = http://localhost:5080
+
+GET {{FileDriveAPi_HostAddress}}/api/files/
+
+###
