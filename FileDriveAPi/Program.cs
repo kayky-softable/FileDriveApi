@@ -15,10 +15,6 @@ builder.Services.AddDbContext<FileDriveApiDbContext>(options =>
     )
 );
 
-// Add services to the container.
-var services = builder.Services;
-var configuration = builder.Configuration;
-
 // Add user secrets
 builder.Configuration.AddUserSecrets<Program>();
 
@@ -34,24 +30,32 @@ if (string.IsNullOrEmpty(accessKey) || string.IsNullOrEmpty(secretKey))
 // Register AmazonS3Client with the credentials
 builder.Services.AddSingleton<AmazonS3Client>(provider =>
 {
-    var endpoint = RegionEndpoint.USEast2; // Define the endpoint as necessary
+    var endpoint = RegionEndpoint.USEast2; // Defina conforme necessário
     var config = new AmazonS3Config { RegionEndpoint = endpoint };
 
     return new AmazonS3Client(new BasicAWSCredentials(accessKey, secretKey), config);
 });
 
 // Register FileService for dependency injection
-builder.Services.AddScoped<FileDriveService>();  // Register FileService as scoped service
+builder.Services.AddScoped<FileDriveService>();
 
 // Add controllers and Swagger configuration
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 
-// Build application
+// === Adiciona configuração de CORS ===
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+        policy.AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader());
+});
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Configura o pipeline HTTP
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -59,6 +63,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// === Aplica a política de CORS ===
+app.UseCors("AllowAll");
+
 app.MapControllers();
 
 app.Run();
